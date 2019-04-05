@@ -27,7 +27,7 @@ function Problem_a()
 			filename = char(images(img));
 			RGB_img = double(imread( filename ));
 			RGB_img = Padding(RGB_img);
-			r_RGB_img = Divide_and_Drop(RGB_img, nn);
+			r_RGB_img = Divide_and_Drop(RGB_img, n(nn));
 			imwrite(uint8(r_RGB_img), sprintf('n%d_%s', n(nn), filename));
 		end
 	end
