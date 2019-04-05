@@ -1,36 +1,62 @@
 clear all;
 clc;
 
-% RGB_img = double(imread('cat1.png'));
-% % image(RGB_img);
-
-% r_RGB_img = Problem_a(RGB_img, 8);
-% imwrite(r_RGB_img,'r_cat1.png');
-
-% YIQ_img = RGB2YIQ(RGB_img);
-% YIQ_testbench = rgb2ntsc(RGB_img);
-
-
 % input = [0, 0, 0, 153, 255, 255, 220, 220]';
 % output = OneD_DCT(input)
 
-input = [255, 255, 255, 255, 255, 255, 159, 159;
-		 255,   0,   0,   0, 255, 255, 159, 159;
-		 255,   0,   0,   0, 255, 255, 255, 255;
-		 255,   0,   0,   0, 255, 255, 255, 255;
-		 255, 255, 255, 255, 255, 255, 100, 255;
-		 255, 255, 255, 255, 255, 255, 100, 255;
-		 255, 255, 255, 255, 255, 255, 100, 255;
-		 255, 255, 255, 255, 255, 255, 100, 255];
-multi = zeros(8, 8, 3);
-for i = 1:3
-	multi(:,:,i) = input;
+% input = [255, 255, 255, 255, 255, 255, 159, 159;
+% 		 255,   0,   0,   0, 255, 255, 159, 159;
+% 		 255,   0,   0,   0, 255, 255, 255, 255;
+% 		 255,   0,   0,   0, 255, 255, 255, 255;
+% 		 255, 255, 255, 255, 255, 255, 100, 255;
+% 		 255, 255, 255, 255, 255, 255, 100, 255;
+% 		 255, 255, 255, 255, 255, 255, 100, 255;
+% 		 255, 255, 255, 255, 255, 255, 100, 255];
+% r_input = Divide_and_Drop(input, 4);
+% image(uint8(r_input),'CDataMapping','scaled');
+
+
+Problem_a();
+
+function Problem_a()
+	images = ["cat1.png", "cat2_gray.png", "cat3_LR.png"];
+	n = [2, 4, 8];
+
+	for img = 1:length(images)
+		for nn = 1:length(n)
+			filename = char(images(img));
+			RGB_img = double(imread( filename ));
+			RGB_img = Padding(RGB_img);
+			r_RGB_img = Divide_and_Drop(RGB_img, nn);
+			imwrite(uint8(r_RGB_img), sprintf('n%d_%s', n(nn), filename));
+		end
+	end
 end
-r_input = Problem_a(multi, 4);
-% image(r_input,'CDataMapping','scaled');
+
+function Problem_b()
+	% YIQ_img = RGB2YIQ(RGB_img);
+	% YIQ_testbench = rgb2ntsc(RGB_img);
+end
+
+function extended = Padding(spatial)
+	[height, width, layer] = size(spatial);
+	n = 8;
+	if mod(height, n) == 0 && mod(width, n) == 0
+		extended = spatial;
+	else
+		ext_height = (uint64((height - 1)/n) + 1) * n;
+		ext_width = (uint64((width - 1)/n) + 1) * n;
+		extended = zeros(ext_height, ext_width, layer);
+		for u = 1:height
+			for v = 1:width
+				extended(u, v, :) = spatial(u, v, :);
+			end
+		end
+	end
+end
 
 
-function r_spatial = Problem_a(spatial, n)
+function r_spatial = Divide_and_Drop(spatial, n)
 	[height, width, layer] = size(spatial);
 	frequency = zeros(height, width, layer);
 	tmp = zeros(8, 8, layer);
@@ -47,7 +73,7 @@ function r_spatial = Problem_a(spatial, n)
 			% end
 		end
 	end
-	disp('Done Problem_a')
+	disp('Done Divide_and_Drop')
 end
 
 function dropped = Drop(frequency, n)
