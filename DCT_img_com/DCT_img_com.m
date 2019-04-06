@@ -16,7 +16,8 @@ clc;
 % image(uint8(r_input),'CDataMapping','scaled');
 
 
-Problem_a();
+% Problem_a();
+Problem_b();
 
 function Problem_a()
 	images = ["cat1.png", "cat2_gray.png", "cat3_LR.png"];
@@ -46,6 +47,7 @@ end
 
 function Problem_b()
 	% images = ["cat1.png", "cat2_gray.png", "cat3_LR.png"];
+	% images = ["cat2_gray.png"];
 	images = ["cat1.png"];
 	% n = [2, 4, 8];
 	n = [8];
@@ -56,18 +58,24 @@ function Problem_b()
 			filename = char(images(idx_img));
 
 			uint_RGB_img = imread(filename);
-			YIQ_img = RGB2YIQ(uint_RGB_img);
-			% YIQ_testbench = rgb2ntsc(RGB_img);
-			raw_dim = size(uint_RGB_img);
-
 			RGB_img = double(uint_RGB_img);
-			ext_RGB_img = Padding(RGB_img);
-			r_RGB_img = Divide_and_Drop(ext_RGB_img, n(idx_n));
-			r_RGB_img = Trim(raw_dim, r_RGB_img);
 
-			uint_r_RGB_img = uint8(r_RGB_img);
-			PSNRs(idx_img, idx_n) = PSNR(RGB_img, r_RGB_img);
-			imwrite(uint_r_RGB_img, sprintf('n%d_%s', n(idx_n), filename));
+			% YIQ_img = rgb2ntsc(uint_RGB_img);
+			% r_RGB_img = ntsc2rgb(YIQ_img);
+
+			YIQ_img = RGB2YIQ(RGB_img);
+			r_RGB_img = YIQ2RGB(YIQ_img);
+			image(uint8(r_RGB_img));
+			% raw_dim = size(uint_RGB_img);
+
+			% RGB_img = double(uint_RGB_img);
+			% ext_RGB_img = Padding(RGB_img);
+			% r_RGB_img = Divide_and_Drop(ext_RGB_img, n(idx_n));
+			% r_RGB_img = Trim(raw_dim, r_RGB_img);
+
+			% uint_r_RGB_img = uint8(r_RGB_img);
+			% PSNRs(idx_img, idx_n) = PSNR(RGB_img, r_RGB_img);
+			% imwrite(uint_r_RGB_img, sprintf('n%d_%s', n(idx_n), filename));
 		end
 	end
 	% save('PSNR_b.mat', 'PSNRs');
@@ -228,11 +236,13 @@ end
 
 
 function YIQ_img = RGB2YIQ(RGB_img)
-	raw_dim = size(RGB_img);
-	height = raw_dim(1);
-	width = raw_dim(2);
+	raw_size = size(RGB_img);
+	raw_dim = length(raw_size);
+	height = raw_size(1);
+	width = raw_size(2);
 	layer = 3;
 
+	ext_RGB_img = zeros(height, width, layer);
 	YIQ_img = zeros(height, width, layer);
 	RGB2YIQmat = [
 		0.299, 0.587,  0.114;
@@ -240,14 +250,37 @@ function YIQ_img = RGB2YIQ(RGB_img)
 		0.212, -0.523, 0.311];
 
 	if raw_dim == 2
-		RGB_img(end, end, 2) = RGB_img(end, end);
-		RGB_img(end, end, 3) = RGB_img(end, end);
+		ext_RGB_img = cat(3, RGB_img, RGB_img, RGB_img);
 	end
 
 	for h = 1:height
 		for w = 1:width
-			YIQ_img(h, w, :) = RGB2YIQmat * reshape(RGB_img(h, w, :),[],1);
+			if raw_dim == 2
+				YIQ_img(h, w, :) = RGB2YIQmat * reshape(ext_RGB_img(h, w, :), [3, 1]);
+			else
+				YIQ_img(h, w, :) = RGB2YIQmat * reshape(RGB_img(h, w, :), [3, 1]);			
+			end
 		end
 	end
 	disp('Done RGB2YIQ')
+end
+
+function RGB_img = YIQ2RGB(YIQ_img)
+	raw_size = size(YIQ_img);
+	height = raw_size(1);
+	width = raw_size(2);
+	layer = 3;
+
+	RGB_img = zeros(height, width, layer);
+	YIQ2RGBmat = [
+		1.000, 0.956,  0.619;
+		1.000, -0.272, -0.647;
+		1.000, -1.106, 1.703];
+
+	for h = 1:height
+		for w = 1:width
+			RGB_img(h, w, :) = YIQ2RGBmat * reshape(YIQ_img(h, w, :), [3, 1]);
+		end
+	end
+	disp('Done YIQ2RGB')
 end
