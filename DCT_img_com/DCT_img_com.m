@@ -1,27 +1,12 @@
 clear all;
 clc;
 
-% input = [0, 0, 0, 153, 255, 255, 220, 220]';
-% output = OneD_DCT(input)
-
-% input = [255, 255, 255, 255, 255, 255, 159, 159;
-% 		 255,   0,   0,   0, 255, 255, 159, 159;
-% 		 255,   0,   0,   0, 255, 255, 255, 255;
-% 		 255,   0,   0,   0, 255, 255, 255, 255;
-% 		 255, 255, 255, 255, 255, 255, 100, 255;
-% 		 255, 255, 255, 255, 255, 255, 100, 255;
-% 		 255, 255, 255, 255, 255, 255, 100, 255;
-% 		 255, 255, 255, 255, 255, 255, 100, 255];
-% r_input = Divide_and_Drop(input, 4);
-% image(uint8(r_input),'CDataMapping','scaled');
-
-
-% Problem_a();
+Problem_a();
 Problem_b();
 
 function Problem_a()
-	images = ["cat1.png", "cat2_gray.png", "cat3_LR.png"];
-	% images = ["cat2_gray.png"];
+	% images = ["cat1.png", "cat2_gray.png", "cat3_LR.png"];
+	images = ["cat1.png"];
 	n = [2, 4, 8];
 	PSNRs = zeros(length(images), length(n));
 
@@ -33,20 +18,22 @@ function Problem_a()
 			raw_dim = size(uint_RGB_img);
 
 			RGB_img = double(uint_RGB_img);
-			ext_RGB_img = Padding(RGB_img);
-			r_RGB_img = Divide_and_Drop(ext_RGB_img, n(idx_n));
-			r_RGB_img = Trim(raw_dim, r_RGB_img);
+			% ext_RGB_img = Padding(RGB_img);
+			% r_RGB_img = Divide_and_Drop(ext_RGB_img, n(idx_n));
+			r_RGB_img = Divide_and_Drop(RGB_img, n(idx_n));
+			% r_RGB_img = Trim(raw_dim, r_RGB_img);
 
 			uint_r_RGB_img = uint8(r_RGB_img);
 			PSNRs(idx_img, idx_n) = PSNR(RGB_img, r_RGB_img);
-			imwrite(uint_r_RGB_img, sprintf('n%d_%s', n(idx_n), filename));
+			imwrite(uint_r_RGB_img, sprintf('a_n%d_%s', n(idx_n), filename));
 		end
 	end
 	save('PSNR_a.mat', 'PSNRs');
 end
 
 function Problem_b()
-	images = ["cat1.png", "cat2_gray.png", "cat3_LR.png"];
+	% images = ["cat1.png", "cat2_gray.png", "cat3_LR.png"];
+	images = ["cat1.png"];
 	n = [2, 4, 8];
 	PSNRs = zeros(length(images), length(n));
 
@@ -60,13 +47,14 @@ function Problem_b()
 			RGB_img = double(uint_RGB_img);
 			YIQ_img = RGB2YIQ(RGB_img);
 
-			ext_YIQ_img = Padding(YIQ_img);
-			r_YIQ_img = Divide_and_Drop(ext_YIQ_img, n(idx_n));
-			if raw_dim == 2
-				r_YIQ_img = Trim([raw_size, 3], r_YIQ_img);
-			else
-				r_YIQ_img = Trim(raw_size, r_YIQ_img);
-			end
+			% ext_YIQ_img = Padding(YIQ_img);
+			% r_YIQ_img = Divide_and_Drop(ext_YIQ_img, n(idx_n));
+			% if raw_dim == 2
+			% 	r_YIQ_img = Trim([raw_size, 3], r_YIQ_img);
+			% else
+			% 	r_YIQ_img = Trim(raw_size, r_YIQ_img);
+			% end
+			r_YIQ_img = Divide_and_Drop(YIQ_img, n(idx_n));
 
 			r_RGB_img = YIQ2RGB(r_YIQ_img);
 			uint_r_RGB_img = uint8(r_RGB_img);
@@ -136,7 +124,7 @@ function r_spatial = Divide_and_Drop(spatial, n)
 			% end
 		end
 	end
-	disp('Done Divide_and_Drop')
+	% disp('Done Divide_and_Drop')
 end
 
 function dropped = Drop(frequency, n)
@@ -149,7 +137,7 @@ function dropped = Drop(frequency, n)
 			end
 		end
 	end
-	disp('Done Drop')
+	% disp('Done Drop')
 end
 
 function ret = C(u)
@@ -170,7 +158,7 @@ function frequency = OneD_DCT(spatial)
     	end
     	frequency(u+1) = tmp;
     end
-    disp('Done OneD_DCT')
+    % disp('Done OneD_DCT')
 end
 
 function frequency = TwoD_DCT(spatial)
@@ -192,7 +180,7 @@ function frequency = TwoD_DCT(spatial)
 		end
 		% fprintf('TwoD_DCT: done layer %d.\n', l);
 	end
-	disp('Done TwoD_DCT')
+	% disp('Done TwoD_DCT')
 end
 
 function spatial = TwoD_invDCT(frequency)
@@ -212,7 +200,7 @@ function spatial = TwoD_invDCT(frequency)
 			end
 		end
 	end
-	disp('Done TwoD_invDCT')
+	% disp('Done TwoD_invDCT')
 end
 
 function scalar = PSNR(raw_spatial, r_spatial)
@@ -259,7 +247,7 @@ function YIQ_img = RGB2YIQ(RGB_img)
 			end
 		end
 	end
-	disp('Done RGB2YIQ')
+	% disp('Done RGB2YIQ')
 end
 
 function RGB_img = YIQ2RGB(YIQ_img)
@@ -280,5 +268,5 @@ function RGB_img = YIQ2RGB(YIQ_img)
 			RGB_img(h, w, :) = YIQ2RGBmat * reshape(tmp, [3, 1]);
 		end
 	end
-	disp('Done YIQ2RGB')
+	% disp('Done YIQ2RGB')
 end
