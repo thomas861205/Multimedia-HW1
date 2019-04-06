@@ -2,31 +2,45 @@ clear all;
 clc;
 
 Problem_a();
-% Problem_b();
+Problem_b();
 
 function Problem_a()
-
-	test_input = [255, 255, 255;
-				  255, 255, 255;
-				  255, 255, 255];
-
 	hsize = [[3 3]; [5 5]; [7 7]];
 	sig = 1;
 	[filter_num, ~] = size(hsize);
-
+	PSNRs = zeros(1, filter_num);
 	uint_img = imread('cat3_LR.png');
 	img = double(uint_img);
 
-	% for idx_hsize = 1:filter_num
-	% 	G = fspecial( 'gaussian', hsize(idx_hsize), sig);
-	% end
-
-	extended_img = Padding(test_input, hsize(3));
-	trimmed_img = Trim(extended_img, hsize(3))
+	for idx_hsize = 1:filter_num
+		G = fspecial( 'gaussian', hsize(idx_hsize), sig);
+		extended_img = Padding(img, hsize(idx_hsize));
+		convolved = Convolution(extended_img, G);
+		trimmed_img = Trim(convolved, hsize(idx_hsize));
+		% imshow(uint8(trimmed_img))
+		imwrite(uint8(trimmed_img), sprintf('a_n%d_conv.png', hsize(idx_hsize)));
+		PSNRs(idx_hsize) = PSNR(img, trimmed_img);
+	end
+	save('PSNR_a.mat', 'PSNRs');
 end
 
 function Problem_b()
-	a = 1;
+	hsize = [5 5];
+	sig = [1, 5, 10];
+	PSNRs = zeros(1, length(sig));
+	uint_img = imread('cat3_LR.png');
+	img = double(uint_img);
+
+	for idx_sig = 1:length(sig)
+		G = fspecial( 'gaussian', hsize, sig(idx_sig));
+		extended_img = Padding(img, 5);
+		convolved = Convolution(extended_img, G);
+		trimmed_img = Trim(convolved, 5);
+		% imshow(uint8(trimmed_img))
+		imwrite(uint8(trimmed_img), sprintf('b_sig%d_conv.png', sig(idx_sig)));
+		PSNRs(idx_sig) = PSNR(img, trimmed_img);
+	end
+	save('PSNR_b.mat', 'PSNRs');
 end
 
 function extended = Padding(spatial, n)
@@ -56,6 +70,31 @@ function trimmed = Trim(spatial, n)
 			end
 		end
 	end
+end
+
+function convolved = Convolution(spatial, G)
+	[height, width, layer] = size(spatial);
+	[G_height, G_width] = size(G);
+	margin_height = (G_height-1)/2;
+	margin_width = (G_width-1)/2;
+	offset_height = (margin_height+1);
+	offset_width = (margin_width+1);
+	convolved = zeros(height, width, layer);
+
+	for l = 1:layer
+		for u = 1+margin_height : height-margin_height
+			for v = 1+margin_width : width-margin_width
+				tmp = 0;
+				for r =  1:G_height
+					for s = 1:G_width
+						tmp = tmp + spatial(u+r-offset_height, v+s-offset_width, l) * G(r,s);
+					end
+				end
+				convolved(u, v, l) = tmp;
+			end
+		end
+	end
+	disp('Done Convolution')
 end
 
 function scalar = PSNR(raw_spatial, r_spatial)
