@@ -1,8 +1,8 @@
 clear all;
 clc;
 
-% Problem_a();
-% Problem_b();
+Problem_a();
+Problem_b();
 Problem_c();
 
 function Problem_a()

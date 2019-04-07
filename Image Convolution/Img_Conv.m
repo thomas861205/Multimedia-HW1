@@ -94,7 +94,7 @@ function convolved = Convolution(spatial, G)
 			end
 		end
 	end
-	disp('Done Convolution')
+	% disp('Done Convolution')
 end
 
 function scalar = PSNR(raw_spatial, r_spatial)

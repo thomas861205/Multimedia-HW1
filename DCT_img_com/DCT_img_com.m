@@ -5,7 +5,6 @@ Problem_a();
 Problem_b();
 
 function Problem_a()
-	% images = ["cat1.png", "cat2_gray.png", "cat3_LR.png"];
 	images = ["cat1.png"];
 	n = [2, 4, 8];
 	PSNRs = zeros(length(images), length(n));
@@ -18,10 +17,7 @@ function Problem_a()
 			raw_dim = size(uint_RGB_img);
 
 			RGB_img = double(uint_RGB_img);
-			% ext_RGB_img = Padding(RGB_img);
-			% r_RGB_img = Divide_and_Drop(ext_RGB_img, n(idx_n));
 			r_RGB_img = Divide_and_Drop(RGB_img, n(idx_n));
-			% r_RGB_img = Trim(raw_dim, r_RGB_img);
 
 			uint_r_RGB_img = uint8(r_RGB_img);
 			PSNRs(idx_img, idx_n) = PSNR(RGB_img, r_RGB_img);
@@ -32,7 +28,6 @@ function Problem_a()
 end
 
 function Problem_b()
-	% images = ["cat1.png", "cat2_gray.png", "cat3_LR.png"];
 	images = ["cat1.png"];
 	n = [2, 4, 8];
 	PSNRs = zeros(length(images), length(n));
@@ -47,13 +42,6 @@ function Problem_b()
 			RGB_img = double(uint_RGB_img);
 			YIQ_img = RGB2YIQ(RGB_img);
 
-			% ext_YIQ_img = Padding(YIQ_img);
-			% r_YIQ_img = Divide_and_Drop(ext_YIQ_img, n(idx_n));
-			% if raw_dim == 2
-			% 	r_YIQ_img = Trim([raw_size, 3], r_YIQ_img);
-			% else
-			% 	r_YIQ_img = Trim(raw_size, r_YIQ_img);
-			% end
 			r_YIQ_img = Divide_and_Drop(YIQ_img, n(idx_n));
 
 			r_RGB_img = YIQ2RGB(r_YIQ_img);
@@ -66,47 +54,6 @@ function Problem_b()
 	save('PSNR_b.mat', 'PSNRs');
 end
 
-function extended = Padding(spatial)
-	[height, width, layer] = size(spatial);
-	n = 8;
-	if mod(height, n) == 0 && mod(width, n) == 0
-		extended = spatial;
-	else
-		ext_height = (uint64((height - 1)/n) + 1) * n;
-		ext_width = (uint64((width - 1)/n) + 1) * n;
-		extended = zeros(ext_height, ext_width, layer);
-		for u = 1:height
-			for v = 1:width
-				extended(u, v, :) = spatial(u, v, :);
-			end
-		end
-	end
-end
-
-function trimmed = Trim(raw_size, ext_spatial)
-	height = raw_size(1);
-	width = raw_size(2);
-	if length(raw_size) == 3
-		layer = raw_size(3);
-	else
-		layer = 1;
-	end
-	trimmed = zeros(height, width, layer);
-	n = 8;
-
-	if mod(height, n) == 0 && mod(width, n) == 0
-		trimmed = ext_spatial;
-	else
-		for l = 1:layer
-			for u = 1:height
-				for v = 1:width
-					trimmed(u,v,l) = ext_spatial(u,v,l);
-				end
-			end
-		end
-	end
-end
-
 function r_spatial = Divide_and_Drop(spatial, n)
 	[height, width, layer] = size(spatial);
 	frequency = zeros(height, width, layer);
@@ -117,11 +64,6 @@ function r_spatial = Divide_and_Drop(spatial, n)
 			tmp = TwoD_DCT(spatial(uu:uu+8-1, vv:vv+8-1, :));
 			tmp = Drop(tmp, n);
 			r_spatial(uu:uu+8-1, vv:vv+8-1, :) = TwoD_invDCT(tmp);
-			% for l = 1:layer
-			% 	tmp = TwoD_DCT(spatial(uu:uu+8-1, vv:vv+8-1, l));
-			% 	tmp = Drop(tmp, 8);
-			% 	r_spatial(uu:uu+8-1, vv:vv+8-1, l) = TwoD_invDCT(tmp);
-			% end
 		end
 	end
 	% disp('Done Divide_and_Drop')
@@ -146,19 +88,6 @@ function ret = C(u)
 	else
 		ret = 1;
 	end
-end
-
-function frequency = OneD_DCT(spatial)
-	[height, width] = size(spatial);
-    frequency = zeros(height, width);
-    for u = 0:height-1
-    	tmp = 0;
-    	for r = 0:height-1
-    		tmp = tmp + sqrt(2/height)*C(u) * spatial(r+1) * cos((2*r+1)*u*pi/(2*height));
-    	end
-    	frequency(u+1) = tmp;
-    end
-    % disp('Done OneD_DCT')
 end
 
 function frequency = TwoD_DCT(spatial)
